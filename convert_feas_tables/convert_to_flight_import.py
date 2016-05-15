@@ -60,7 +60,7 @@ def matches_filter(input_dict, row_filter):
         matching_field = input_dict.get(row_filter[0], '')
         for criteria in row_filter[1]:
             if criteria in matching_field:
-                is_matching_filter=True
+                is_matching_filter = True
     else:
         is_matching_filter = True
     return is_matching_filter
@@ -100,14 +100,60 @@ def convert_starttype(feas_start_type):
     return result
 
 
+def convert_type(feas_type):
+    result = None
+
+    if feas_type == 'F':
+        result = '15'  # Fremdflug
+    elif feas_type == 'G':
+        result = '4'  # Passagierflug == Gastflug
+    elif feas_type == 'L':
+        result = '14'  # Luftrettung
+    elif feas_type == 'N':
+        result = '10'  # Normalflug == Privatflug
+    elif feas_type == 'R':
+        result = '3'
+    elif feas_type == 'S':
+        result = '8'
+    elif feas_type == 'V':
+        result = '13'  # Vereinsflug
+    elif feas_type == 'W':
+        result = '2'
+    return result
+
+
+def convert_charge(feas_type, flight=None):
+    result = None
+    if feas_type == 'F':
+        result = '1'  # Fremdflug
+    elif feas_type == 'G':
+        result = '4'  # Passagierflug == Gastflug
+    elif feas_type == 'L':
+        result = '1'  # Luftrettung
+    elif feas_type == 'N':
+        result = '2'  # Normalflug == Privatflug
+    elif feas_type == 'R':
+        result = '2'
+    elif feas_type == 'S':
+        if flight.get('Begleiter', '') == '':
+            result = '2'
+        else:
+            result = '3'
+    elif feas_type == 'V':
+        result = '1'  # Vereinsflug
+    elif feas_type == 'W':
+        result = '1'
+    return result
+
+
 def convert_feas_export(directory_path):
-    flight_main = open_csv(os.path.join(directory_path, "Flight.csv"), row_filter=('SDate', ['2014', '2015', '2016']))
+    flight_main = open_csv(os.path.join(directory_path, "Flight.csv"),
+                           row_filter=('SDate', ['2014', '2015', '2016']))
 
     tow_dict = None
     for row in flight_main:
         if row['MasterRecord'] == '0':
-            tow_dict = row  # tow row comes first
-            continue
+            tow_dict = find_tow_dict(row['SlaveRecordID'], flight_main)
         else:
             tow_dict = dict()
             flight_dict = row
@@ -142,10 +188,9 @@ def convert_feas_export(directory_path):
                                "255"
                                )
 
-
-def write_flight_import_dict(dict_list):
-    output_file_path = os.path.join(os.path.dirname(__file__), 'flight_import.csv')
-    with open(output_file_path, 'wb') as flight_import_csv:
-        dict_writer = csv.DictWriter(flight_import_csv, fieldnames)
-        dict_writer.writeheader()
-        dict_writer.writerows(dict_list)
+    def write_flight_import_dict(dict_list):
+        output_file_path = os.path.join(os.path.dirname(__file__), 'flight_import.csv')
+        with open(output_file_path, 'wb') as flight_import_csv:
+            dict_writer = csv.DictWriter(flight_import_csv, fieldnames)
+            dict_writer.writeheader()
+            dict_writer.writerows(dict_list)

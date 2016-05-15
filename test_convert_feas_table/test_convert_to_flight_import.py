@@ -9,7 +9,8 @@ Description:
 """
 
 import unittest
-from convert_feas_tables.convert_to_flight_import import matches_filter, convert_time, convert_starttype
+from convert_feas_tables.convert_to_flight_import import matches_filter, convert_time, convert_starttype, convert_type, \
+    convert_charge
 
 
 class ConvertToFlightImportTestCase(unittest.TestCase):
@@ -40,6 +41,30 @@ class ConvertToFlightImportTestCase(unittest.TestCase):
         self.assertEqual('1', convert_starttype('E'))
         self.assertEqual('3', convert_starttype('F'))
         self.assertEqual(None, convert_starttype('FAIL'))
+
+    def test_convert_type(self):
+        self.assertEqual('15', convert_type('F'))  # Fremdflug
+        self.assertEqual('4', convert_type('G'))  # Passagierflug == Gastflug
+        self.assertEqual('14', convert_type('L'))  # Luftrettung
+        self.assertEqual('10', convert_type('N'))  # Normalflug == Privatflug
+        self.assertEqual('3', convert_type('R'))
+        self.assertEqual('8', convert_type('S'))
+        self.assertEqual('13', convert_type('V'))  # Vereinsflug
+        self.assertEqual('2', convert_type('W'))
+        self.assertEqual(None, convert_type('Q'))
+
+    def test_convert_charge(self):
+        self.assertEqual('1', convert_charge('F'))  # Fremdflug -> Rechnung
+        self.assertEqual('4', convert_charge('G'))  # Passagierflug
+        self.assertEqual('1', convert_charge('L'))  # Luftrettung -> Rechnung
+        self.assertEqual('2', convert_charge('N'))  # Normalflug == Privatflug
+        self.assertEqual('2', convert_charge('R'))
+        self.assertEqual('2', convert_charge('S', {'Begleiter': ''}))
+        self.assertEqual('3', convert_charge('S', {'Begleiter': 'Name'}))
+        self.assertEqual('1', convert_charge('V'))  # Vereinsflug == keine Rechnung
+        self.assertEqual('1', convert_charge('W'))  # Werstattflug -> Verein zahlt
+        self.assertEqual(None, convert_charge('Q'))
+
 
 if __name__ == '__main__':
     unittest.main()
