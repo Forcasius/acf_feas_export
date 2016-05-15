@@ -54,17 +54,30 @@ def get_flight_import_dict(callsign, pilotname, attendantname, departuretime, de
     return result
 
 
-def open_csv(file_path):
+def matches_filter(input_dict, row_filter):
+    is_matching_filter = False
+    if row_filter:
+        matching_field = input_dict.get(row_filter[0], '')
+        for criteria in row_filter[1]:
+            if criteria in matching_field:
+                is_matching_filter=True
+    else:
+        is_matching_filter = True
+    return is_matching_filter
+
+
+def open_csv(file_path, row_filter=None):
     dict_list = list()
     with open(file_path, 'rb') as file_handle:
         dict_reader = csv.DictReader(file_handle)
         for row in dict_reader:
-            dict_list.append(row)
+            if matches_filter(row, row_filter):
+                dict_list.append(row)
     return dict_list
 
 
 def convert_feas_export(directory_path):
-    flight_main = open_csv(os.path.join(directory_path, "Flight.csv"))
+    flight_main = open_csv(os.path.join(directory_path, "Flight.csv"), row_filter=('SDate', ['2014', '2015', '2016']))
 
     tow_dict = None
     for row in flight_main:
@@ -87,7 +100,7 @@ def convert_feas_export(directory_path):
                                convert_starttype(flight_dict.get('SA', '')),
                                flight_dict.get('', ''),  # TODO
                                flight_dict.get('', ''),  # TODO
-                               flight_dict.get('', ''),  # TODO
+                               flight_dict.get('', ''),  # TODO tow height
                                get_tow_time(tow_dict.get('STime', ''), tow_dict.get('LTime')),
                                flight_dict.get('imported', ''),
                                tow_dict.get('LK', '') + '-' + tow_dict.get('KZ'),
