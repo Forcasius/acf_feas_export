@@ -82,8 +82,6 @@ def convert_time(input_date: str, input_time: str):
 
     Output shall be 10.02.2016 13:00 (DD.MM.YYYY HH:MM)
     """
-    output = ''
-
     date_part = input_date.split('/')
     output = date_part[1] + '.' + date_part[0] + '.' + date_part[2]
     time_string = input_time[input_time.find(' '):]
@@ -122,7 +120,7 @@ def convert_type(feas_type):
     return result
 
 
-def convert_charge(feas_type, flight=None):
+def convert_charge(feas_type: str, flight=None):
     result = None
     if feas_type == 'F':
         result = '1'  # Fremdflug
@@ -146,51 +144,74 @@ def convert_charge(feas_type, flight=None):
     return result
 
 
-def convert_feas_export(directory_path):
-    flight_main = open_csv(os.path.join(directory_path, "Flight.csv"),
+def get_dict_for_flight_id(search_id: str, input_dict: list):
+    found_flight = None
+    for flight in input_dict:
+        if search_id == flight.get('ID', ''):
+            found_flight = flight
+    return found_flight
+
+
+def convert_feas_export(directory_path: str):
+    flight_main = open_csv(os.path.join(directory_path, "TBL_Flight_Main.xlsx"),
                            row_filter=('SDate', ['2014', '2015', '2016']))
+    flight_payment = open_csv(os.path.join(directory_path, "TBL_Flight_Payment.xlsx"))
 
-    tow_dict = None
-    for row in flight_main:
-        if row['MasterRecord'] == '0':
-            tow_dict = find_tow_dict(row['SlaveRecordID'], flight_main)
-        else:
-            tow_dict = dict()
-            flight_dict = row
+    full_flight_list = list()
 
-        get_flight_import_dict(flight_dict.get('LK', '') + '-' + flight_dict.get('KZ'),
-                               flight_dict.get('Pilot', ''),
-                               flight_dict.get('Begleiter', ''),
-                               convert_time(flight_dict.get('SDate', ''), flight_dict.get('STime')),
-                               flight_dict.get('StartOrt', ''),
-                               convert_time(flight_dict.get('LDate', ''), flight_dict.get('LTime')),
-                               flight_dict.get('LandeOrt', ''),
-                               flight_dict.get('Dauer', ''),
-                               '1',
-                               convert_starttype(flight_dict.get('SA', '')),
-                               flight_dict.get('', ''),  # TODO
-                               flight_dict.get('', ''),  # TODO
-                               flight_dict.get('', ''),  # TODO tow height
-                               get_tow_time(tow_dict.get('STime', ''), tow_dict.get('LTime')),
-                               flight_dict.get('imported', ''),
-                               tow_dict.get('LK', '') + '-' + tow_dict.get('KZ'),
-                               tow_dict.get('Pilot', ''),
-                               convert_type(tow_dict.get('FA', '')),
-                               '',
-                               tow_dict.get('Muster', ''),
-                               '',
-                               '',
-                               '',
-                               '',
-                               '',
-                               '',
-                               convert_charge(tow_dict.get('', '')),
-                               "255"
-                               )
+    for flight in flight_main:
+        slave_record_id = flight['SlaveRecordID']
+        if flight['MasterRecord'] == '1' and not slave_record_id == '0':  # The slave is always the tow flight
+            tow_flight_dict = get_dict_for_flight_id(slave_record_id, flight_main)
+            flight_dict = flight
+            tow_pay_dict = get_dict_for_flight_id(slave_record_id, flight_payment)
+        else:  # it flies on its own!
+            tow_flight_dict = dict()
+            tow_pay_dict = dict()
+            flight_dict = flight
 
-    def write_flight_import_dict(dict_list):
-        output_file_path = os.path.join(os.path.dirname(__file__), 'flight_import.csv')
-        with open(output_file_path, 'wb') as flight_import_csv:
-            dict_writer = csv.DictWriter(flight_import_csv, fieldnames)
-            dict_writer.writeheader()
-            dict_writer.writerows(dict_list)
+        flight_import_dict = get_flight_import_dict(flight_dict.get('LK', '') + '-' + flight_dict.get('KZ'),
+                                                    flight_dict.get('Pilot', ''),
+                                                    flight_dict.get('Begleiter', ''),
+                                                    convert_time(flight_dict.get('SDate', ''),
+                                                                 flight_dict.get('STime')),
+                                                    flight_dict.get('StartOrt', ''),
+                                                    convert_time(flight_dict.get('LDate', ''),
+                                                                 flight_dict.get('LTime')),
+                                                    flight_dict.get('LandeOrt', ''),
+                                                    flight_dict.get('Dauer', ''),
+                                                    '1',
+                                                    convert_starttype(flight_dict.get('SA', '')),
+                                                    flight_dict.get('', ''),  # TODO
+                                                    flight_dict.get('', ''),  # TODO
+                                                    tow_pay_dict.get('TowPeak', ''),  # TODO tow height
+                                                    tow_flight_dict.get('Dauer', ''),
+                                                    flight_dict.get('imported', ''),
+                                                    tow_flight_dict.get('LK', '') + '-' + tow_flight_dict.get('KZ'),
+                                                    tow_flight_dict.get('Pilot', ''),
+                                                    convert_type(tow_flight_dict.get('FA', '')),
+                                                    '',
+                                                    tow_flight_dict.get('Muster', ''),
+                                                    '',
+                                                    '',
+                                                    '',
+                                                    '',
+                                                    '',
+                                                    '',
+                                                    convert_charge(tow_flight_dict.get('', '')),
+                                                    "255"
+                                                    )
+        full_flight_list.append(flight_import_dict)
+    write_flight_import_dict(full_flight_list)
+
+
+def write_flight_import_dict(dict_list: list):
+    output_file_path = os.path.join(os.path.dirname(__file__), 'flight_import.csv')
+    with open(output_file_path, 'wb') as flight_import_csv:
+        dict_writer = csv.DictWriter(flight_import_csv, fieldnames)
+        dict_writer.writeheader()
+        dict_writer.writerows(dict_list)
+
+
+if __name__ == '__main__':
+    convert_feas_export(os.path.dirname(__file__))

@@ -10,7 +10,7 @@ Description:
 
 import unittest
 from convert_feas_tables.convert_to_flight_import import matches_filter, convert_time, convert_starttype, convert_type, \
-    convert_charge
+    convert_charge, get_dict_for_flight_id
 
 
 class ConvertToFlightImportTestCase(unittest.TestCase):
@@ -65,6 +65,15 @@ class ConvertToFlightImportTestCase(unittest.TestCase):
         self.assertEqual('1', convert_charge('W'))  # Werstattflug -> Verein zahlt
         self.assertEqual(None, convert_charge('Q'))
 
+    def test_get_dict_for_flight_id(self):
+        search_dict = [{'foo': '23', 'bar': '45', 'ID': '1234'},
+                       {'foo': '23', 'bar': '45', 'ID': '1237'},
+                       {'foo': '23', 'bar': '45', 'ID': '12'},
+                       {'foo': '23', 'bar': '45', 'ID': '229000'}
+                       ]
+        self.assertDictEqual(search_dict[2], get_dict_for_flight_id('12', search_dict))
+        self.assertDictEqual(search_dict[3], get_dict_for_flight_id('229000', search_dict))
+        self.assertEqual(None, get_dict_for_flight_id('229001', search_dict))
 
 if __name__ == '__main__':
     unittest.main()
