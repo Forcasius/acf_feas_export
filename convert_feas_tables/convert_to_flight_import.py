@@ -76,6 +76,21 @@ def open_csv(file_path, row_filter=None):
     return dict_list
 
 
+def convert_time(input_date: str, input_time: str):
+    """
+    Input is 04/01/2007 (MM/DD/YYYY) and 12/30/1899 13:35:00 (WRONG DATE HH:MM)
+
+    Output shall be 10.02.2016 13:00 (DD.MM.YYYY HH:MM)
+    """
+    output = ''
+
+    date_part = input_date.split('/')
+    output = date_part[1] + '.' + date_part[0] + '.' + date_part[2]
+    time_string = input_time[input_time.find(' '):]
+    output += time_string[:-3]
+    return output
+
+
 def convert_feas_export(directory_path):
     flight_main = open_csv(os.path.join(directory_path, "Flight.csv"), row_filter=('SDate', ['2014', '2015', '2016']))
 

@@ -9,7 +9,7 @@ Description:
 """
 
 import unittest
-from convert_feas_tables.convert_to_flight_import import matches_filter
+from convert_feas_tables.convert_to_flight_import import matches_filter, convert_time
 
 
 class ConvertToFlightImportTestCase(unittest.TestCase):
@@ -32,6 +32,9 @@ class ConvertToFlightImportTestCase(unittest.TestCase):
     def test_matches_filter_with_no_filter(self):
         self.assertEqual(True, matches_filter({'Foo': 'bar', 'SDate': '2/03/2014', 'Baz': 'fbar'}, None))
 
+    def test_convert_time(self):
+        self.assertEqual('01.04.2007 13:35', convert_time('04/01/2007', '12/30/1899 13:35:00'))
+        self.assertEqual('14.05.2016 15:58', convert_time('05/14/2016', '12/30/1899 15:58:34'))
 
 if __name__ == '__main__':
     unittest.main()
