@@ -91,6 +91,15 @@ def convert_time(input_date: str, input_time: str):
     return output
 
 
+def convert_starttype(feas_start_type):
+    result = None
+    if feas_start_type == 'E':
+        result = '1'
+    elif feas_start_type == 'F':
+        result = '3'
+    return result
+
+
 def convert_feas_export(directory_path):
     flight_main = open_csv(os.path.join(directory_path, "Flight.csv"), row_filter=('SDate', ['2014', '2015', '2016']))
 
