@@ -9,8 +9,8 @@ Description:
 """
 
 import os
-import csv
 import logging
+from convert_feas_tables.convert_common import open_csv, write_flight_import_dict
 
 fieldnames = ["callsign", "pilotname", "attendantname", "departuretime", "departurelocation", "arrivaltime",
               "arrivallocation", "flighttime", "landingcount", "starttype", "motorstart", "motorend", "towheight",
@@ -53,42 +53,6 @@ def get_flight_import_dict(callsign, pilotname, attendantname, departuretime, de
         invoiced=invoiced
     )
     return result
-
-
-def matches_filter(input_dict, row_filter):
-    is_matching_filter = False
-    if row_filter:
-        matching_field = input_dict.get(row_filter[0], '')
-        for criteria in row_filter[1]:
-            if criteria in matching_field:
-                is_matching_filter = True
-    else:
-        is_matching_filter = True
-    return is_matching_filter
-
-
-def open_csv(file_path, row_filter=None):
-    dict_list = list()
-    with open(file_path, 'r') as file_handle:
-        dict_reader = csv.DictReader(file_handle, delimiter=';')
-        for row in dict_reader:
-            if matches_filter(row, row_filter):
-                dict_list.append(row)
-    return dict_list
-
-
-def open_xlsx(file_path, row_filter=None):
-    dict_list = list()
-    import pyexcel
-
-    r = pyexcel.SeriesReader(file_path)
-    # make a filter function
-    # filter_func = lambda row_index: row_index < 124 or row_index > 141
-    # apply the filter on the reader
-    # r.filter(pyexcel.filters.RowIndexFilter(filter_func))
-    # get the data
-    dict_list = pyexcel.utils.to_records(r)
-    return dict_list
 
 
 def convert_time(input_date: str, input_time: str):
@@ -224,7 +188,7 @@ def convert_feas_export(directory_path: str):
                                                         "255"
                                                         )
             full_flight_list.append(flight_import_dict)
-        write_flight_import_dict(full_flight_list)
+        write_flight_import_dict(full_flight_list, fieldnames, 'flight_import.csv')
     except Exception:
         logging.exception("Exception during convertion")
     finally:
@@ -263,16 +227,6 @@ def assemble_call_sign(lk, kz):
 def sanity_check(flight_dict, tow_flight_dict):
     if not flight_dict['STime'] == tow_flight_dict['STime']:
         logging.error('Tow flight and flight do not match! \n' + str(flight_dict) + '\n' + str(tow_flight_dict))
-
-
-def write_flight_import_dict(dict_list: list):
-    output_file_path = os.path.join(os.path.dirname(__file__), 'flight_import.csv')
-    if os.path.isfile(output_file_path):
-        os.rename(output_file_path, output_file_path + '.bak')
-    with open(output_file_path, 'w', encoding='ISO-8859-1') as flight_import_csv:
-        dict_writer = csv.DictWriter(flight_import_csv, fieldnames, delimiter=';')
-        dict_writer.writeheader()
-        dict_writer.writerows(dict_list)
 
 
 if __name__ == '__main__':
