@@ -10,6 +10,7 @@ Description:
 
 import os
 import csv
+import logging
 
 fieldnames = ["callsign", "pilotname", "attendantname", "departuretime", "departurelocation", "arrivaltime",
               "arrivallocation", "flighttime", "landingcount", "starttype", "motorstart", "motorend", "towheight",
@@ -82,9 +83,9 @@ def open_xlsx(file_path, row_filter=None):
 
     r = pyexcel.SeriesReader(file_path)
     # make a filter function
-    #filter_func = lambda row_index: row_index < 124 or row_index > 141
+    # filter_func = lambda row_index: row_index < 124 or row_index > 141
     # apply the filter on the reader
-    #r.filter(pyexcel.filters.RowIndexFilter(filter_func))
+    # r.filter(pyexcel.filters.RowIndexFilter(filter_func))
     # get the data
     dict_list = pyexcel.utils.to_records(r)
     return dict_list
@@ -97,6 +98,8 @@ def convert_time(input_date: str, input_time: str):
     Output shall be 10.02.2016 13:00 (DD.MM.YYYY HH:MM)
     """
     date_part = input_date.split('/')
+    if not len(date_part) == 3:
+        logging.error("Date Format is wrong: %s %s", input_date, input_time)
     output = date_part[1] + '.' + date_part[0] + '.' + date_part[2]
     time_string = input_time[input_time.find(' '):]
     output += time_string[:-3]
@@ -158,10 +161,10 @@ def convert_charge(feas_type: str, flight=None):
     return result
 
 
-def get_dict_for_flight_id(search_id: str, input_dict: list):
+def get_dict_for_flight_id(search_id: str, input_dict: list, column_name='ID'):
     found_flight = None
     for flight in input_dict:
-        if search_id == flight.get('ID', ''):
+        if search_id == flight.get(column_name, ''):
             found_flight = flight
     return found_flight
 
@@ -173,57 +176,63 @@ def convert_feas_export(directory_path: str):
 
     full_flight_list = list()
 
-    for flight in flight_main:
-        slave_record_id = flight['SlaveRecordID']
-        if flight['MasterRecord'] == '1' and not slave_record_id == '0':  # The slave is always the tow flight
-            tow_flight_dict = get_dict_for_flight_id(slave_record_id, flight_main)
-            flight_dict = flight
-            tow_pay_dict = get_dict_for_flight_id(slave_record_id, flight_payment)
-            sanity_check(flight_dict, tow_flight_dict)
-        else:  # it flies on its own!
-            tow_flight_dict = dict()
-            tow_pay_dict = dict()
-            flight_dict = flight
+    try:
+        for flight in flight_main:
+            slave_record_id = flight['SlaveRecordID']
+            if flight['MasterRecord'] == '1' and not slave_record_id == '0':  # The slave is always the tow flight
+                tow_flight_dict = get_dict_for_flight_id(slave_record_id, flight_main)
+                flight_dict = flight
+                tow_pay_dict = get_dict_for_flight_id(flight['ID'], flight_payment, 'Index')
+                sanity_check(flight_dict, tow_flight_dict)
+            if flight['MasterRecord'] == '0':
+                continue  # Skip the tow plane!
+            else:  # it flies on its own!
+                tow_flight_dict = dict()
+                tow_pay_dict = dict()
+                flight_dict = flight
 
-
-        flight_import_dict = get_flight_import_dict(flight_dict.get('LK', '') + '-' + flight_dict.get('KZ'),
-                                                    flight_dict.get('Pilot', ''),  # TODO: get full name
-                                                    flight_dict.get('Begleiter', ''),  # TODO: get full name
-                                                    convert_time(flight_dict.get('SDate', ''),
-                                                                 flight_dict.get('STime')),
-                                                    flight_dict.get('StartOrt', ''),
-                                                    convert_time(flight_dict.get('LDate', ''),
-                                                                 flight_dict.get('LTime')),
-                                                    flight_dict.get('LandeOrt', ''),
-                                                    flight_dict.get('Dauer', ''),
-                                                    '1',
-                                                    convert_starttype(flight_dict.get('SA', '')),
-                                                    flight_dict.get('', ''),  # TODO ?
-                                                    flight_dict.get('', ''),  # TODO ?
-                                                    tow_pay_dict.get('TowPeak', ''),  # TODO tow height
-                                                    tow_flight_dict.get('Dauer', ''),
-                                                    flight_dict.get('imported', ''),
-                                                    tow_flight_dict.get('LK', '') + '-' + tow_flight_dict.get('KZ', ''),
-                                                    tow_flight_dict.get('Pilot', ''),  # TODO: get full name
-                                                    convert_type(tow_flight_dict.get('FA', '')),
-                                                    '',
-                                                    tow_flight_dict.get('Muster', ''),
-                                                    '',
-                                                    '',
-                                                    '',
-                                                    '',
-                                                    '',
-                                                    '',
-                                                    convert_charge(tow_flight_dict.get('', '')),
-                                                    "255"
-                                                    )
-        full_flight_list.append(flight_import_dict)
-    write_flight_import_dict(full_flight_list)
+            flight_import_dict = get_flight_import_dict(flight_dict.get('LK', '') + '-' + flight_dict.get('KZ'),
+                                                        flight_dict.get('Pilot', ''),  # TODO: get full name
+                                                        flight_dict.get('Begleiter', ''),  # TODO: get full name
+                                                        convert_time(flight_dict.get('SDate', ''),
+                                                                     flight_dict.get('STime')),
+                                                        flight_dict.get('StartOrt', ''),
+                                                        convert_time(flight_dict.get('LDate', ''),
+                                                                     flight_dict.get('LTime')),
+                                                        flight_dict.get('LandeOrt', ''),
+                                                        flight_dict.get('Dauer', ''),
+                                                        '1',
+                                                        convert_starttype(flight_dict.get('SA', '')),
+                                                        flight_dict.get('', ''),  # TODO ?
+                                                        flight_dict.get('', ''),  # TODO ?
+                                                        tow_pay_dict.get('TowPeak', ''),  # TODO tow height
+                                                        tow_flight_dict.get('Dauer', ''),
+                                                        flight_dict.get('imported', ''),
+                                                        tow_flight_dict.get('LK', '') + '-' + tow_flight_dict.get('KZ', ''),
+                                                        tow_flight_dict.get('Pilot', ''),  # TODO: get full name
+                                                        convert_type(tow_flight_dict.get('FA', '')),
+                                                        '',
+                                                        tow_flight_dict.get('Muster', ''),
+                                                        '',
+                                                        '',
+                                                        '',
+                                                        '',
+                                                        '',
+                                                        '',
+                                                        convert_charge(tow_flight_dict.get('', '')),
+                                                        "255"
+                                                        )
+            full_flight_list.append(flight_import_dict)
+        write_flight_import_dict(full_flight_list)
+    except Exception:
+        logging.exception("Exception during convertion")
+    finally:
+        print("Number of converted flights: ", len(full_flight_list))
 
 
 def sanity_check(flight_dict, tow_flight_dict):
     if not flight_dict['STime'] == tow_flight_dict['STime']:
-        raise RuntimeError('Tow flight and flight do not match! ' + str(flight_dict) + ' ' + str(tow_flight_dict))
+        logging.error('Tow flight and flight do not match! \n' + str(flight_dict) + '\n' + str(tow_flight_dict))
 
 
 def write_flight_import_dict(dict_list: list):
@@ -236,3 +245,5 @@ def write_flight_import_dict(dict_list: list):
 
 if __name__ == '__main__':
     convert_feas_export(os.path.dirname(__file__))
+    log_path = os.path.join(os.path.dirname(__file__), 'log.txt')
+    logging.basicConfig(level=logging.DEBUG, filename='log.log')
