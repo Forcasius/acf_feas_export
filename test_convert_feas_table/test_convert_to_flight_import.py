@@ -7,10 +7,10 @@ License: MIT
 Description:
 
 """
-
+import os
 import unittest
 from convert_feas_tables.convert_to_flight_import import matches_filter, convert_time, convert_starttype, convert_type, \
-    convert_charge, get_dict_for_flight_id
+    convert_charge, get_dict_for_flight_id, write_flight_import_dict, get_flight_import_dict
 
 
 class ConvertToFlightImportTestCase(unittest.TestCase):
@@ -74,6 +74,16 @@ class ConvertToFlightImportTestCase(unittest.TestCase):
         self.assertDictEqual(search_dict[2], get_dict_for_flight_id('12', search_dict))
         self.assertDictEqual(search_dict[3], get_dict_for_flight_id('229000', search_dict))
         self.assertEqual(None, get_dict_for_flight_id('229001', search_dict))
+
+    def test_write_flight_import_dict(self):
+        test_dict = []
+        test_dict.append(
+            get_flight_import_dict('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
+                                   'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '1', 'ä'))
+        write_flight_import_dict(test_dict)
+        self.assertTrue(
+            os.path.isfile(os.path.join(os.path.dirname(__file__), '../convert_feas_tables', 'flight_import.csv')))
+
 
 if __name__ == '__main__':
     unittest.main()
