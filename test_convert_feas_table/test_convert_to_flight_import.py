@@ -10,7 +10,7 @@ Description:
 import os
 import unittest
 from convert_feas_tables.convert_to_flight_import import matches_filter, convert_time, convert_starttype, convert_type, \
-    convert_charge, get_dict_for_flight_id, write_flight_import_dict, get_flight_import_dict
+    convert_charge, get_dict_for_flight_id, write_flight_import_dict, get_flight_import_dict, get_full_name
 
 
 class ConvertToFlightImportTestCase(unittest.TestCase):
@@ -54,16 +54,16 @@ class ConvertToFlightImportTestCase(unittest.TestCase):
         self.assertEqual(None, convert_type('Q'))
 
     def test_convert_charge(self):
-        self.assertEqual('1', convert_charge('F'))  # Fremdflug -> Rechnung
-        self.assertEqual('4', convert_charge('G'))  # Passagierflug
-        self.assertEqual('1', convert_charge('L'))  # Luftrettung -> Rechnung
-        self.assertEqual('2', convert_charge('N'))  # Normalflug == Privatflug
-        self.assertEqual('2', convert_charge('R'))
+        self.assertEqual('1', convert_charge('F', {}))  # Fremdflug -> Rechnung
+        self.assertEqual('4', convert_charge('G', {}))  # Passagierflug
+        self.assertEqual('1', convert_charge('L', {}))  # Luftrettung -> Rechnung
+        self.assertEqual('2', convert_charge('N', {}))  # Normalflug == Privatflug
+        self.assertEqual('2', convert_charge('R', {}))
         self.assertEqual('2', convert_charge('S', {'Begleiter': ''}))
         self.assertEqual('3', convert_charge('S', {'Begleiter': 'Name'}))
-        self.assertEqual('1', convert_charge('V'))  # Vereinsflug == keine Rechnung
-        self.assertEqual('1', convert_charge('W'))  # Werstattflug -> Verein zahlt
-        self.assertEqual(None, convert_charge('Q'))
+        self.assertEqual('1', convert_charge('V', {}))  # Vereinsflug == keine Rechnung
+        self.assertEqual('1', convert_charge('W', {}))  # Werstattflug -> Verein zahlt
+        self.assertEqual(None, convert_charge('Q', {}))
 
     def test_get_dict_for_flight_id(self):
         search_dict = [{'foo': '23', 'bar': '45', 'ID': '1234'},
@@ -84,6 +84,14 @@ class ConvertToFlightImportTestCase(unittest.TestCase):
         self.assertTrue(
             os.path.isfile(os.path.join(os.path.dirname(__file__), '../convert_feas_tables', 'flight_import.csv')))
 
+    def test_get_full_name(self):
+        members = [{'hui': 'boo', 'Name': 'Foo', 'Vorname': 'Bar', 'bla': 'blubb'},
+                   {'hui': 'boo', 'Name': 'Muster', 'Vorname': 'Max', 'bla': 'blubb'},
+                   {'hui': 'boo', 'Name': 'Doh', 'Vorname': 'John', 'bla': 'blubb'},
+                   {'hui': 'boo', 'Name': 'Klar', 'Vorname': 'Klara', 'bla': 'blubb'}]
+        self.assertEqual('Foo, Bar', get_full_name('Foo, B.', members))
+        self.assertEqual('Doh, John', get_full_name('Doh, J.', members))
+        self.assertEqual('Reich, E.', get_full_name('Reich, E.', members))
 
 if __name__ == '__main__':
     unittest.main()

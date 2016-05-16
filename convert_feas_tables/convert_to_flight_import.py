@@ -137,7 +137,7 @@ def convert_type(feas_type):
     return result
 
 
-def convert_charge(feas_type: str, flight=None):
+def convert_charge(feas_type: str, flight: dict):
     result = None
     if feas_type == 'F':
         result = '1'  # Fremdflug
@@ -173,6 +173,7 @@ def convert_feas_export(directory_path: str):
     flight_main = open_csv(os.path.join(directory_path, "TBL_Flight_Main.csv"),
                            row_filter=('SDate', ['2014', '2015', '2016']))
     flight_payment = open_csv(os.path.join(directory_path, "TBL_Flight_Payment.csv"))
+    members = open_csv(os.path.join(directory_path, "TBL_Members_Main.csv"))
 
     full_flight_list = list()
 
@@ -184,16 +185,16 @@ def convert_feas_export(directory_path: str):
                 flight_dict = flight
                 tow_pay_dict = get_dict_for_flight_id(flight['ID'], flight_payment, 'Index')
                 sanity_check(flight_dict, tow_flight_dict)
-            if flight['MasterRecord'] == '0':
+            elif flight['MasterRecord'] == '0':
                 continue  # Skip the tow plane!
             else:  # it flies on its own!
                 tow_flight_dict = dict()
                 tow_pay_dict = dict()
                 flight_dict = flight
 
-            flight_import_dict = get_flight_import_dict(flight_dict.get('LK', '') + '-' + flight_dict.get('KZ'),
-                                                        flight_dict.get('Pilot', ''),  # TODO: get full name
-                                                        flight_dict.get('Begleiter', ''),  # TODO: get full name
+            flight_import_dict = get_flight_import_dict(assemble_call_sign(flight_dict.get('LK'), flight_dict.get('KZ')),
+                                                        get_full_name(flight_dict.get('Pilot', ''), members),
+                                                        get_full_name(flight_dict.get('Begleiter', ''), members),
                                                         convert_time(flight_dict.get('SDate', ''),
                                                                      flight_dict.get('STime')),
                                                         flight_dict.get('StartOrt', ''),
@@ -207,19 +208,19 @@ def convert_feas_export(directory_path: str):
                                                         flight_dict.get('', ''),  # TODO ?
                                                         tow_pay_dict.get('TowPeak', ''),  # TODO tow height
                                                         tow_flight_dict.get('Dauer', ''),
-                                                        flight_dict.get('imported', ''),
-                                                        tow_flight_dict.get('LK', '') + '-' + tow_flight_dict.get('KZ', ''),
-                                                        tow_flight_dict.get('Pilot', ''),  # TODO: get full name
-                                                        convert_type(tow_flight_dict.get('FA', '')),
+                                                        'imported from FEAS',
+                                                        assemble_call_sign(tow_flight_dict.get('LK'), tow_flight_dict.get('KZ')),
+                                                        get_full_name(tow_flight_dict.get('Pilot', ''), members),
+                                                        convert_type(flight_dict.get('FA', '')),
                                                         '',
-                                                        tow_flight_dict.get('Muster', ''),
-                                                        '',
-                                                        '',
-                                                        '',
+                                                        flight_dict.get('Muster', ''),
+                                                        get_full_name(tow_flight_dict.get('Begleiter', ''), members),
                                                         '',
                                                         '',
                                                         '',
-                                                        convert_charge(tow_flight_dict.get('', '')),
+                                                        '',
+                                                        '',
+                                                        convert_charge(flight_dict.get('FA'), flight_dict),
                                                         "255"
                                                         )
             full_flight_list.append(flight_import_dict)
@@ -228,6 +229,28 @@ def convert_feas_export(directory_path: str):
         logging.exception("Exception during convertion")
     finally:
         print("Number of converted flights: ", len(full_flight_list))
+
+
+def get_full_name(short_name: str, members: list):
+    name = short_name
+    name_parts = short_name.split(',')
+    last_name = name_parts[0]
+    first_name_letter = name_parts[1].strip(' .')
+
+    for member in members:
+        if last_name == member.get('Name'):
+            if first_name_letter == member.get('Vorname')[0]:
+                name = member.get('Name') + ', ' + member.get('Vorname')
+                break
+    return name
+
+
+def assemble_call_sign(lk, kz):
+    if lk and kz:
+        call_sign = lk + '-' + kz
+    else:
+        call_sign = ''
+    return call_sign
 
 
 def sanity_check(flight_dict, tow_flight_dict):
@@ -248,4 +271,4 @@ def write_flight_import_dict(dict_list: list):
 if __name__ == '__main__':
     convert_feas_export(os.path.dirname(__file__))
     log_path = os.path.join(os.path.dirname(__file__), 'log.txt')
-    logging.basicConfig(level=logging.DEBUG, filename='log.log')
+    logging.basicConfig(level=logging.DEBUG, filename=log_path)
