@@ -233,15 +233,22 @@ def convert_feas_export(directory_path: str):
 
 def get_full_name(short_name: str, members: list):
     name = short_name
-    name_parts = short_name.split(',')
-    last_name = name_parts[0]
-    first_name_letter = name_parts[1].strip(' .')
+    try:
+        if short_name:
+            name_parts = short_name.split(' ')
+            last_name = name_parts[0]
+            if len(name_parts) > 1:
+                first_name_letter = name_parts[1].strip(' .')
+            else:
+                first_name_letter = ''
 
-    for member in members:
-        if last_name == member.get('Name'):
-            if first_name_letter == member.get('Vorname')[0]:
-                name = member.get('Name') + ', ' + member.get('Vorname')
-                break
+            for member in members:
+                if last_name == member.get('Name'):
+                    if first_name_letter == member.get('Vorname')[0]:
+                        name = member.get('Name') + ', ' + member.get('Vorname')
+                        break
+    except Exception:
+        logging.exception("Could not convert name %s", short_name)
     return name
 
 
@@ -262,7 +269,7 @@ def write_flight_import_dict(dict_list: list):
     output_file_path = os.path.join(os.path.dirname(__file__), 'flight_import.csv')
     if os.path.isfile(output_file_path):
         os.rename(output_file_path, output_file_path + '.bak')
-    with open(output_file_path, 'w') as flight_import_csv:
+    with open(output_file_path, 'w', encoding='ISO-8859-1') as flight_import_csv:
         dict_writer = csv.DictWriter(flight_import_csv, fieldnames, delimiter=';')
         dict_writer.writeheader()
         dict_writer.writerows(dict_list)

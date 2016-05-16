@@ -89,9 +89,11 @@ class ConvertToFlightImportTestCase(unittest.TestCase):
                    {'hui': 'boo', 'Name': 'Muster', 'Vorname': 'Max', 'bla': 'blubb'},
                    {'hui': 'boo', 'Name': 'Doh', 'Vorname': 'John', 'bla': 'blubb'},
                    {'hui': 'boo', 'Name': 'Klar', 'Vorname': 'Klara', 'bla': 'blubb'}]
-        self.assertEqual('Foo, Bar', get_full_name('Foo, B.', members))
-        self.assertEqual('Doh, John', get_full_name('Doh, J.', members))
-        self.assertEqual('Reich, E.', get_full_name('Reich, E.', members))
+        self.assertEqual('Foo, Bar', get_full_name('Foo B.', members))
+        self.assertEqual('Doh, John', get_full_name('Doh J.', members))
+        self.assertEqual('Reich E.', get_full_name('Reich E.', members))
+        self.assertEqual('Guest', get_full_name('Guest', members))
+        self.assertEqual('', get_full_name('', members))
 
 if __name__ == '__main__':
     unittest.main()
