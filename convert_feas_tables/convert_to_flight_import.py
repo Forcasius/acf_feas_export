@@ -228,7 +228,7 @@ def convert_feas_export(directory_path: str):
     except Exception:
         logging.exception("Exception during convertion")
     finally:
-        print("Number of converted flights: ", len(full_flight_list))
+        logging.info("Number of converted flights: %d", len(full_flight_list))
 
 
 def get_full_name(short_name: str, members: list):
@@ -276,6 +276,7 @@ def write_flight_import_dict(dict_list: list):
 
 
 if __name__ == '__main__':
-    convert_feas_export(os.path.dirname(__file__))
     log_path = os.path.join(os.path.dirname(__file__), 'log.txt')
-    logging.basicConfig(level=logging.DEBUG, filename=log_path)
+    logging.basicConfig(level=logging.DEBUG, filename=log_path, filemode='w')
+    logging.getLogger().addHandler(logging.StreamHandler())
+    convert_feas_export(os.path.dirname(__file__))
