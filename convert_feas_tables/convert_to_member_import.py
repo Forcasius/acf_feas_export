@@ -191,7 +191,7 @@ def convert_member_import(directory_path: str):
     try:
         for member in members_main:
             member_import_dict = get_flight_import_dict('',
-                                                        member.get('Nachname'),
+                                                        member.get('Name'),
                                                         member.get('Vorname'),
                                                         '',
                                                         '',
@@ -250,7 +250,7 @@ def convert_member_import(directory_path: str):
                                                         '',
                                                         '',
                                                         '',
-                                                        has_licence('C', member.get('SchleppLizenzen')),  # GPL tow
+                                                        has_licence('A', member.get('SchleppLizenzen')),  # GPL tow
                                                         '',
                                                         has_licence('B', member.get('LizenzInhaber')),  # tmg
                                                         '',
