@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 """
 Author: Markus W. Hofmann
 Initial Date: May 9, 2016
@@ -164,6 +166,18 @@ def get_flight_import_dict(title, lastname, firstname, street, zipcode, town, cy
         english_level_validto=english_level_validto
     )
     return result
+
+
+def get_member_status(status: str):
+    if status == 'fördernd':
+        result_state = '5'
+    elif status == 'aktiv':
+        result_state = '1'
+    elif status == 'teilaktiv':
+        result_state = '2'
+    else:
+        result_state = '6'
+    return result_state
 
 
 def convert_member_import(directory_path: str):
