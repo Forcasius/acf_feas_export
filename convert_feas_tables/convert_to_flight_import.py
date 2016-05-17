@@ -170,7 +170,7 @@ def convert_feas_export(directory_path: str):
                                                         convert_starttype(flight_dict.get('SA', '')),
                                                         flight_dict.get('', ''),  # TODO ?
                                                         flight_dict.get('', ''),  # TODO ?
-                                                        tow_pay_dict.get('TowPeak', ''),  # TODO tow height
+                                                        tow_pay_dict.get('TowPeak', ''),
                                                         tow_flight_dict.get('Dauer', ''),
                                                         'imported from FEAS',
                                                         assemble_call_sign(tow_flight_dict.get('LK'), tow_flight_dict.get('KZ')),
