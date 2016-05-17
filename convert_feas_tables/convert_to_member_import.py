@@ -180,6 +180,10 @@ def get_member_status(status: str):
     return result_state
 
 
+def has_licence(licence: str, licence_string: str):
+    return str(int(licence in licence_string))
+
+
 def convert_member_import(directory_path: str):
     members_main = open_csv(os.path.join(directory_path, "TBL_Members_Main.csv"))
     full_member_list = list()
@@ -238,7 +242,7 @@ def convert_member_import(directory_path: str):
                                                         '',
                                                         '',
                                                         '',
-                                                        get_gpl_licence(member.get('LizenzInhaber')),
+                                                        has_licence('C', member.get('LizenzInhaber')),  # GPL
                                                         '',
                                                         '',
                                                         '',
@@ -246,33 +250,9 @@ def convert_member_import(directory_path: str):
                                                         '',
                                                         '',
                                                         '',
-                                                        get_gpl_tow_licence(member.get('SchleppLizenzen')),
+                                                        has_licence('C', member.get('SchleppLizenzen')),  # GPL tow
                                                         '',
-                                                        get_tmg_licence(member.get('LizenzInhaber')),
-                                                        '',
-                                                        '',
-                                                        '',
-                                                        '',
-                                                        '',
-                                                        '',
-                                                        '',
-                                                        '',
-                                                        '',
-                                                        get_ul_licence(member.get('LizenzInhaber')),
-                                                        '',
-                                                        '',
-                                                        '',
-                                                        '',
-                                                        get_ppla_licence(member.get('LizenzInhaber')),
-                                                        '',
-                                                        '',
-                                                        is_gpl_instructor(member.get('LehrerLizenzen')),
-                                                        '',
-                                                        '',
-                                                        is_ul_flight_instructor(member.get('LehrerLizenzen')),
-                                                        '',
-                                                        '',
-                                                        is_ppl_flight_instructor(member.get('LehrerLizenzen')),
+                                                        has_licence('B', member.get('LizenzInhaber')),  # tmg
                                                         '',
                                                         '',
                                                         '',
@@ -282,15 +262,39 @@ def convert_member_import(directory_path: str):
                                                         '',
                                                         '',
                                                         '',
+                                                        has_licence('F', member.get('LizenzInhaber')),  # ul
+                                                        '',
+                                                        '',
+                                                        '',
+                                                        '',
+                                                        has_licence('A', member.get('LizenzInhaber')),  # ppl-a
+                                                        '',
+                                                        '',
+                                                        has_licence('C', member.get('LehrerLizenzen')),  # gpl inst
+                                                        '',
+                                                        '',
+                                                        has_licence('F', member.get('LehrerLizenzen')),  # ul inst
+                                                        '',
+                                                        '',
+                                                        has_licence('A', member.get('LehrerLizenzen')),  # ppl inst
                                                         '',
                                                         '',
                                                         '',
                                                         '',
                                                         '',
                                                         '',
-                                                        can_tow_tmg(member.get('SchleppLizenzen')),
                                                         '',
-                                                        can_ul_tow(member.get('SchleppLizenzen')),
+                                                        '',
+                                                        '',
+                                                        '',
+                                                        '',
+                                                        '',
+                                                        '',
+                                                        '',
+                                                        '',
+                                                        has_licence('B', member.get('SchleppLizenzen')),  # tmg tow
+                                                        '',
+                                                        has_licence('F', member.get('SchleppLizenzen')),  # ul tow
                                                         '',
                                                         '',
                                                         '',

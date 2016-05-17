@@ -10,8 +10,9 @@ Description:
 import os
 import unittest
 from convert_feas_tables.convert_to_flight_import import convert_time, convert_starttype, convert_type, \
-    convert_charge, get_dict_for_flight_id, write_flight_import_dict, get_flight_import_dict, get_full_name
+    convert_charge, get_dict_for_flight_id, get_flight_import_dict, get_full_name
 from convert_feas_tables.convert_common import matches_filter, write_flight_import_dict
+from convert_feas_tables.convert_to_member_import import has_licence
 
 
 class ConvertToFlightImportTestCase(unittest.TestCase):
@@ -97,6 +98,14 @@ class ConvertToFlightImportTestCase(unittest.TestCase):
         self.assertEqual('Guest', get_full_name('Guest', members))
         self.assertEqual('', get_full_name('', members))
 
+    def test_has_licence(self):
+        self.assertEqual('1', has_licence('F', 'ABCF'))
+        self.assertEqual('1', has_licence('A', 'A'))
+        self.assertEqual('0', has_licence('A', 'F'))
+        self.assertEqual('1', has_licence('B', 'ABF'))
+        self.assertEqual('1', has_licence('', ''))
+        self.assertEqual('0', has_licence('F', ''))
+        self.assertEqual('0', has_licence('V', 'ABF'))
 
 if __name__ == '__main__':
     unittest.main()
