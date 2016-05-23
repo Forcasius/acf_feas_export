@@ -197,7 +197,7 @@ def convert_member_import(directory_path: str):
                                                         '',
                                                         '',
                                                         '1',  # country code
-                                                        '',  # TODO Email
+                                                        member.get('EmailAdress'),
                                                         '',
                                                         '',
                                                         '',
